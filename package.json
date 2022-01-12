@@ -1,0 +1,16 @@
+{
+  "name": "binancetokoinly",
+  "version": "1.0.0",
+  "description": "converts binance conversion data to csv format",
+  "main": "binanceToKoinly.ts",
+  "scripts": {
+    "b2k": "ts-node binanceToKoinly.ts"
+  },
+  "author": "Niall O'Callaghan",
+  "license": "MIT",
+  "devDependencies": {
+    "fast-csv": "^4.3.6",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
+  }
+}
