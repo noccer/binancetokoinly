@@ -11,11 +11,12 @@
  * Then paste into the 'binanceData.json' file in the same folder as this file.
  */
 
-import binanceConversions from "./binanceData.json";
+import bitarooTrades from "./data/trades.json";
 
-const conversions = binanceConversions.data
-
-type BinanceConvertEvent = typeof conversions[number];
+type BitarooTrades = typeof bitarooTrades[number] & {
+  side: "buy" | "sell";
+  role: "taker" | "maker";
+};
 
 type KoinlyTrade = {
   "Koinly Date": string;
@@ -41,10 +42,10 @@ type IKoinly = {
   tradeId: KoinlyTrade["Trade ID"];
 };
 
-type TransformedKoinlyTrade = BinanceConvertEvent & KoinlyTrade;
+type TransformedKoinlyTrade = BitarooTrades & KoinlyTrade;
 
 /** Maps BinanceColumns to KoinlyColumns */
-const convertBinanceToKoinly: (binanceEvent: BinanceConvertEvent) => void = (
+const convertBinanceToKoinly: (binanceEvent: BitarooTrades) => void = (
   binanceColumns,
 ) => {
   const {
@@ -57,7 +58,7 @@ const convertBinanceToKoinly: (binanceEvent: BinanceConvertEvent) => void = (
     tradeId,
     orderId,
     amount,
-  } = getKoinly(binanceColumns);
+  } = convertBitarooTradesToKoinly(binanceColumns);
   const convertedKoinlyData: TransformedKoinlyTrade = {
     ...binanceColumns,
     "Koinly Date": koinlyDate,
@@ -79,30 +80,31 @@ const convertBinanceToKoinly: (binanceEvent: BinanceConvertEvent) => void = (
 };
 
 /** Get Pair from binanceColumns */
-const getKoinly: (binanceColumns: BinanceConvertEvent) => IKoinly = (
-  binanceColumns,
-) => {
+const convertBitarooTradesToKoinly: (
+  bitarooTrades: BitarooTrades,
+) => IKoinly = (bitarooColumns) => {
   const {
-    toCoin,
-    fromCoin,
-    spreadCoin,
-    spreadAmount,
+    amount,
+    fee,
     orderId,
-    quoteId,
-    toCoinAmount,
-    fromCoinAmount,
-  } = binanceColumns;
+    price,
+    recordId,
+    role,
+    side,
+    timestamp,
+    tradeId,
+  } = bitarooColumns;
 
-  const koinlyDate = new Date(binanceColumns.createTimestamp).toISOString();
+  const koinlyDate = new Date(bitarooColumns.timestamp).toISOString();
 
-  const pair = `${fromCoin}-${toCoin}`;
+  const pair = side === "buy" ? `AUD-BTC` : `BTC-AUD`;
 
   const koinly: IKoinly = {
     koinlyDate,
     pair,
     side: "SELL",
-    feeCurrency: spreadCoin,
-    feeAmount: Number(spreadAmount),
+    feeCurrency: "AUD",
+    feeAmount: Number(fee),
     total: Number(toCoinAmount),
     amount: Number(fromCoinAmount),
     orderId,
@@ -118,7 +120,7 @@ const csvStream = csv.format({ headers: true });
 
 csvStream.pipe(process.stdout).on("end", () => process.exit());
 
-const converted: TransformedKoinlyTrade[] = []
+const converted: TransformedKoinlyTrade[] = [];
 
 conversions.forEach(convertBinanceToKoinly);
 // csvStream.write({ header1: "row1-col1", header2: "row1-col2" });
@@ -126,7 +128,5 @@ conversions.forEach(convertBinanceToKoinly);
 // csvStream.write({ header1: "row3-col1", header2: "row3-col2" });
 // csvStream.write({ header1: "row4-col1", header2: "row4-col2" });
 // csvStream.write({ header1: "row5-col1", header2: "row5-col2" });
-
-
 
 csvStream.end();

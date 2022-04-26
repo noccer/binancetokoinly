@@ -1,10 +1,10 @@
 {
-  "name": "binancetokoinly",
+  "name": "bitarootokoinly",
   "version": "1.0.0",
-  "description": "converts binance conversion data to csv format",
-  "main": "binanceToKoinly.ts",
+  "description": "converts bitaroo trade data to csv format",
+  "main": "bitarooToKoinly.ts",
   "scripts": {
-    "b2k": "ts-node binanceToKoinly.ts"
+    "b2k": "ts-node bitarooToKoinly.ts"
   },
   "author": "Niall O'Callaghan",
   "license": "MIT",
